@@ -1,14 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
-using Mono.CompilerServices.SymbolWriter;
-using Unity.Collections;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Networking;
 using Quaternion = UnityEngine.Quaternion;
-using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
 public class BoardManager : MonoBehaviour
@@ -19,11 +12,11 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private int mapDimensions;
     [SerializeField] private GameObject protoTile;
     [SerializeField] private Vector3 firstTileCentre;
-    [SerializeField] private float tileSize;
+    private float tileSize;
 
     public List<GameTile> result;
 
-    private List<GameTile> aStarSearch(GameTile start, GameTile destination)
+    private void aStarSearch(GameTile start, GameTile destination)
     {
         openList = new List<GameTile>();
         closedList = new List<GameTile>();
@@ -44,17 +37,18 @@ public class BoardManager : MonoBehaviour
 
             openList.Remove(q);
 
-            List<GameTile> neighbours = findNeighbours(q.position);
-            foreach (var neighbour in neighbours)
+            List<GameTile> successors = findNeighbours(q.position);
+            foreach (var successor in successors)
             {
-                neighbour.parent = q;
+                successor.parent = q;
             }
 
-            foreach (var successor in neighbours)
+            foreach (var successor in successors)
             {
-                if (successor.Equals(destination))
+                if (successor.position.Equals(destination.position))
                 {
-                    return closedList;
+                    Debug.Log("Succeeded");
+                    return;
                 }
 
                 int distanceSuccessorQ = manhattanDistance(successor.position, q.position);
@@ -66,7 +60,7 @@ public class BoardManager : MonoBehaviour
 
                 foreach (var tile in openList)
                 {
-                    if (tile.position == successor.position && tile.f < successor.f)
+                    if (tile.position.Equals(successor.position) && tile.f < successor.f)
                     {
                         goto LoopEnd;
                     }
@@ -74,7 +68,7 @@ public class BoardManager : MonoBehaviour
 
                 foreach (var tile in closedList)
                 {
-                    if (tile.position == successor.position && tile.f < successor.f)
+                    if (tile.position.Equals(successor.position) && tile.f < successor.f)
                     {
                         goto LoopEnd;
                     }
@@ -88,7 +82,7 @@ public class BoardManager : MonoBehaviour
             closedList.Add(q);
         }
 
-        return closedList;
+        Debug.Log("Failed");
     }
 
     private int manhattanDistance(Vector2Int start, Vector2Int end)
@@ -137,7 +131,9 @@ public class BoardManager : MonoBehaviour
             {
                 Vector3 positionAdd = new Vector3(i * tileSize, j * tileSize, 0);
                 GameObject newGameTile = Instantiate(protoTile, firstTileCentre + positionAdd, Quaternion.identity);
-                newGameTile.GetComponent<GameTile>().position = new Vector2Int(i, j);
+                Vector2Int position = new Vector2Int(i, j);
+                newGameTile.GetComponent<GameTile>().position = position;
+                newGameTile.name = position.ToString();
                 line.Add(newGameTile.GetComponent<GameTile>());
             }
 
@@ -148,9 +144,10 @@ public class BoardManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        tileSize = protoTile.transform.localScale.x;
         createMap();
         Debug.Log("ey");
-        result = aStarSearch(tileMap[0][0], tileMap[3][3]);
+        aStarSearch(tileMap[0][0], tileMap[3][3]);
     }
 
     // Update is called once per frame

@@ -8,7 +8,7 @@ public class GameTile : MonoBehaviour
     public float f { get; set; }
     public float g { get; set; }
     public float h { get; set; }
-    public GameTile parent { get; set; }
+    [SerializeField] public GameTile parent;
     public Vector2Int position { get; set; }
 
     public GameTile(Vector2Int position)
