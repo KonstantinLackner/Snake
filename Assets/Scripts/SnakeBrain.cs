@@ -10,11 +10,15 @@ public class SnakeBrain : MonoBehaviour
     private Vector2Int destination;
     [SerializeField] private GameObject protoSnakeTile;
     [SerializeField] private BoardManager boardManager;
+    public List<GameTile> path;
+    private Vector2Int lastDestination;
 
     // Start is called before the first frame update
     void Start()
     {
+        path = new List<GameTile>();
         buildSnake(new Vector2Int(0, 0), new Vector2Int(3, 3));
+        lastDestination = head.position;
         StartCoroutine(moveSnake(new Vector2Int(7, 7)));
     }
 
@@ -55,27 +59,43 @@ public class SnakeBrain : MonoBehaviour
     {
     }
 
+    public void addPath(Vector2Int destination)
+    {
+        List<GameTile> toAdd = boardManager.getPath(lastDestination, destination);
+        lastDestination = destination;
+        path.AddRange(toAdd);
+    }
+    
     IEnumerator moveSnake(Vector2Int destination)
     {
-        // Move head
-        // foreach bodyPart - follow
-        List<GameTile> path = boardManager.getPath(head.position, destination);
-        
-        foreach (var tile in path)
+        while (true)
         {
-            foreach (var bodyPart in snake)
+            if (path.Count > 0)
             {
-                if (bodyPart.isHead)
+                List<GameTile> currentPath = new List<GameTile>(path);
+                foreach (var tile in currentPath)
                 {
-                    bodyPart.moveHead(tile.position);
+                    foreach (var bodyPart in snake)
+                    {
+                        if (bodyPart.isHead)
+                        {
+                            bodyPart.moveHead(tile.position);
+                        }
+                        else
+                        {
+                            bodyPart.moveBody();
+                        }
+                    }
+                
+                    yield return new WaitForSeconds(0.1f);
                 }
-                else
-                {
-                    bodyPart.moveBody();
-                }
+                path.RemoveRange(0, currentPath.Count);
             }
-
-            yield return new WaitForSeconds(0.5f);
+            
+            else
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -12,6 +13,7 @@ public class GameTile : MonoBehaviour
     [SerializeField] public GameTile parent;
     public Vector2Int position { get; set; }
     public TMP_Text text;
+    private SnakeBrain snakeBrain;
 
     public GameTile(Vector2Int position)
     {
@@ -22,10 +24,18 @@ public class GameTile : MonoBehaviour
         parent = null;
     }
 
+    private void OnMouseOver()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            snakeBrain.addPath(position);
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        snakeBrain = GameObject.FindWithTag("SnakeBrain").GetComponent<SnakeBrain>();
     }
 
     // Update is called once per frame
