@@ -4,18 +4,23 @@ using UnityEngine;
 
 public class BodyElement : MonoBehaviour
 {
-    private bool amIHead = false;
+    public bool isHead { get; set; } = false;
+    public BodyElement beforeMe { get; set; }
+    public Vector2Int position { get; set; }
+    private Vector2Int lastPosition;
 
-    private Vector2Int position;
-    // Start is called before the first frame update
-    void Start()
+    public void moveHead(Vector2Int newPosition)
     {
-        
+        lastPosition = position;
+        position = newPosition;
+        transform.position = new Vector3(position.x, position.y, 0);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void moveBody()
     {
-        
+        lastPosition = position;
+        position = beforeMe.lastPosition;
+        transform.position = new Vector3(position.x, position.y, 0);
+        Debug.Log("moved to position" + position.ToString());
     }
 }

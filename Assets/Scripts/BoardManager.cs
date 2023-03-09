@@ -39,7 +39,7 @@ public class BoardManager : MonoBehaviour
 
             if (currentTile.Equals(destination))
             {
-                Debug.Log("Success!");
+                Debug.Log("Succeeded to find a path!");
                 return;
             }
 
@@ -79,7 +79,7 @@ public class BoardManager : MonoBehaviour
 
                 if (successor.position.Equals(destination.position))
                 {
-                    Debug.Log("Succeeded");
+                    Debug.Log("Succeeded to find a path!");
                     return;
                 }
             }
@@ -144,18 +144,17 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         tileSize = protoTile.transform.localScale.x;
         createMap();
-        // 0/0 -> 0/3 doesn't work
-        path = getPath(tileMap[0][0], tileMap[9][9]);
-        colourPath();
     }
 
-    List<GameTile> getPath(GameTile start, GameTile destination)
+    public List<GameTile> getPath(Vector2Int startPosition, Vector2Int destinationPosition)
     {
+        GameTile start = tileMap[startPosition.x][startPosition.y];
+        GameTile destination = tileMap[destinationPosition.x][destinationPosition.y];
+        
         List<GameTile> path = new List<GameTile>();
         aStarSearch(start, destination);
         GameTile currentTile = destination;
@@ -172,14 +171,6 @@ public class BoardManager : MonoBehaviour
         return path;
     }
 
-    void colourPath()
-    {
-        foreach (var tile in path)
-        {
-            tile.gameObject.GetComponent<SpriteRenderer>().color = Color.red;
-        }
-    }
-    
     // Update is called once per frame
     void Update()
     {
