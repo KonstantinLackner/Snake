@@ -236,10 +236,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2dee054ca5e31d46b4178d1ee1cdbf5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapDimensions: 5
-  protoTile: {fileID: 3789292241173535630, guid: ae9b698c36d9116448c1b1a3f4b8551a, type: 3}
+  mapDimensions: 10
+  protoTile: {fileID: 7132715018881256696, guid: e60766d10199dc140bcbd680b33373b1, type: 3}
   firstTileCentre: {x: 0, y: 0, z: 0}
-  result: []
+  path: []
 --- !u!4 &449662378
 Transform:
   m_ObjectHideFlags: 0

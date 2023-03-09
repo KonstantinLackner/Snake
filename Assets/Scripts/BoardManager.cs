@@ -8,13 +8,12 @@ public class BoardManager : MonoBehaviour
 {
     private List<GameTile> openList;
     private List<GameTile> closedList;
-    private List<List<GameTile>> tileMap; // starts at the top left with 0(y)/0(x)
+    private List<List<GameTile>> tileMap; // starts at the top left with 0(x)/0(y)
     [SerializeField] private int mapDimensions;
     [SerializeField] private GameObject protoTile;
     [SerializeField] private Vector3 firstTileCentre;
+    public List<GameTile> path;
     private float tileSize;
-
-    public List<GameTile> result;
 
     private void aStarSearch(GameTile start, GameTile destination)
     {
@@ -26,62 +25,65 @@ public class BoardManager : MonoBehaviour
 
         while (openList.Count > 0)
         {
-            GameTile q = openList[0]; // == tile with minimum f
+            GameTile currentTile = openList[0]; // == tile with minimum f
             foreach (GameTile tile in openList)
             {
-                if (tile.f < q.f)
+                if (tile.f < currentTile.f)
                 {
-                    q = tile;
+                    currentTile = tile;
                 }
             }
 
-            openList.Remove(q);
+            openList.Remove(currentTile);
+            closedList.Add(currentTile);
 
-            List<GameTile> successors = findNeighbours(q.position);
-            foreach (var successor in successors)
+            if (currentTile.Equals(destination))
             {
-                successor.parent = q;
+                Debug.Log("Success!");
+                return;
             }
 
+            List<GameTile> successors = findNeighbours(currentTile.position);
+
             foreach (var successor in successors)
             {
+                if (closedList.Contains(successor))
+                {
+                    continue;
+                }
+
+                if (!openList.Contains(successor))
+                {
+                    openList.Add(successor);
+                    successor.parent = currentTile;
+
+                    int distanceSuccessorQ = manhattanDistance(successor.position, currentTile.position);
+                    int distanceSuccessorDestination = manhattanDistance(successor.position, destination.position);
+
+                    successor.g = currentTile.g + distanceSuccessorQ;
+                    successor.h = distanceSuccessorDestination;
+                    successor.f = successor.g + successor.h;
+                }
+                else
+                {
+                    int newDistanceSuccessorQ = manhattanDistance(successor.position, currentTile.position);
+                    float newG = currentTile.g + newDistanceSuccessorQ;
+
+                    if (newG < successor.g)
+                    {
+                        successor.parent = currentTile;
+                        successor.g = newG;
+                        successor.f = successor.g + successor.h;
+                    }
+                }
+
                 if (successor.position.Equals(destination.position))
                 {
                     Debug.Log("Succeeded");
                     return;
                 }
-
-                int distanceSuccessorQ = manhattanDistance(successor.position, q.position);
-                int distanceSuccessorDestination = manhattanDistance(successor.position, destination.position);
-
-                successor.g = q.g + distanceSuccessorQ;
-                successor.h = distanceSuccessorDestination;
-                successor.f = successor.g + successor.h;
-
-                foreach (var tile in openList)
-                {
-                    if (tile.position.Equals(successor.position) && tile.f < successor.f)
-                    {
-                        goto LoopEnd;
-                    }
-                }
-
-                foreach (var tile in closedList)
-                {
-                    if (tile.position.Equals(successor.position) && tile.f < successor.f)
-                    {
-                        goto LoopEnd;
-                    }
-                }
-
-                openList.Add(successor);
-                LoopEnd:
-                Debug.Log("not the droid you're looking for...");
             }
-
-            closedList.Add(q);
         }
-
         Debug.Log("Failed");
     }
 
@@ -96,25 +98,25 @@ public class BoardManager : MonoBehaviour
         // left tile
         if (position.x > 0)
         {
-            neighbours.Add(tileMap[position.y][position.x - 1]);
+            neighbours.Add(tileMap[position.x - 1][position.y]);
         }
 
         // right tile
         if (position.x < tileMap[0].Count - 1)
         {
-            neighbours.Add(tileMap[position.y][position.x + 1]);
+            neighbours.Add(tileMap[position.x + 1][position.y]);
         }
 
         // top tile
         if (position.y > 0)
         {
-            neighbours.Add(tileMap[position.y - 1][position.x]);
+            neighbours.Add(tileMap[position.x][position.y - 1]);
         }
 
         // bottom tile
         if (position.y < tileMap.Count - 1)
         {
-            neighbours.Add(tileMap[position.y + 1][position.x]);
+            neighbours.Add(tileMap[position.x][position.y + 1]);
         }
 
         return neighbours;
@@ -133,6 +135,7 @@ public class BoardManager : MonoBehaviour
                 GameObject newGameTile = Instantiate(protoTile, firstTileCentre + positionAdd, Quaternion.identity);
                 Vector2Int position = new Vector2Int(i, j);
                 newGameTile.GetComponent<GameTile>().position = position;
+                newGameTile.GetComponent<GameTile>().text.text = position.ToString();
                 newGameTile.name = position.ToString();
                 line.Add(newGameTile.GetComponent<GameTile>());
             }
@@ -146,10 +149,37 @@ public class BoardManager : MonoBehaviour
     {
         tileSize = protoTile.transform.localScale.x;
         createMap();
-        Debug.Log("ey");
-        aStarSearch(tileMap[0][0], tileMap[3][3]);
+        // 0/0 -> 0/3 doesn't work
+        path = getPath(tileMap[0][0], tileMap[9][9]);
+        colourPath();
     }
 
+    List<GameTile> getPath(GameTile start, GameTile destination)
+    {
+        List<GameTile> path = new List<GameTile>();
+        aStarSearch(start, destination);
+        GameTile currentTile = destination;
+        
+        path.Add(destination);
+        while (!currentTile.Equals(start))
+        {
+            currentTile = currentTile.parent;
+            path.Add(currentTile);
+        }
+        
+        path.Reverse();
+        
+        return path;
+    }
+
+    void colourPath()
+    {
+        foreach (var tile in path)
+        {
+            tile.gameObject.GetComponent<SpriteRenderer>().color = Color.red;
+        }
+    }
+    
     // Update is called once per frame
     void Update()
     {

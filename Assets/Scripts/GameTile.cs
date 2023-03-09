@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class GameTile : MonoBehaviour
@@ -10,6 +11,7 @@ public class GameTile : MonoBehaviour
     public float h { get; set; }
     [SerializeField] public GameTile parent;
     public Vector2Int position { get; set; }
+    public TMP_Text text;
 
     public GameTile(Vector2Int position)
     {
